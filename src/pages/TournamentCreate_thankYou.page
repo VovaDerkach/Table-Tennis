@@ -1,0 +1,18 @@
+<apex:page controller="TournamentCreateController">  
+  <apex:sectionHeader title="Visualforce page" subtitle="You have created the tournament!"/>
+
+  <apex:form >
+    <apex:pageBlock title="Tournament Info">
+
+      <apex:pageBlockSection showHeader="false" columns="2">
+        <apex:outputField value="{!tournament.Name__c}" />
+        <apex:outputField value="{!tournament.Type__c}" />
+        <apex:outputField value="{!tournament.Format__c}" />
+        <apex:outputField value="{!tournament.Status__c}" />
+        <apex:outputField value="{!tournament.Start_Date__c}" />
+        <apex:outputField value="{!tournament.Complete_Date__c}" />
+      </apex:pageBlockSection>
+
+    </apex:pageBlock>
+  </apex:form>
+</apex:page>

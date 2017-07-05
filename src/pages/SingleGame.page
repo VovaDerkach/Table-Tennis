@@ -1,0 +1,24 @@
+<apex:page controller="SingleGameController" cache="false" action="{!checkForScores}" extensions="SingleGameExtension">
+    <apex:form >
+    <apex:pageMessages />
+    <apex:pageBlock title="Game Details">
+    <apex:pageBlockSection >
+        <apex:outputField label="Tournament name" value="{!game.Tournament__r.Name__c}"/>       
+        <apex:inputField value="{!game.First_opponent_score__c}" rendered="{!!isScoreConfirmation}"/>
+        <apex:outputField value="{!game.First_opponent_score__c}" rendered="{!isScoreConfirmation}"/>
+        <apex:outputField value="{!game.First_opponent_name__c}"/>       
+        <apex:inputField value="{!game.Second_player_score__c}" rendered="{!!isScoreConfirmation}"/>
+        <apex:outputField value="{!game.Second_player_score__c}" rendered="{!isScoreConfirmation}"/>
+        <apex:outputField value="{!game.Second_opponent_name__c}"/>
+    </apex:pageBlockSection>
+        
+    <apex:pageBlockButtons location="bottom">
+        <apex:commandButton action="{!sendScoresToConfirm}" value="Send scores for confirmation" rendered="{!!isScoreConfirmation}"/>
+        <apex:commandButton action="{!saveScores}" value="Confirm scores" rendered="{!isScoreConfirmation}"/>
+        &nbsp; &nbsp; &nbsp; &nbsp;
+        <apex:commandButton action="{!sendMessageAboutDenial}" value="Deny confirmation" rendered="{!isScoreConfirmation}"/>
+     </apex:pageBlockButtons>
+
+    </apex:pageBlock>
+    </apex:form>
+</apex:page>

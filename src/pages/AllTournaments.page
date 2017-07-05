@@ -1,0 +1,18 @@
+<apex:page controller="ShowTournamentsController" cache="false">
+ <apex:pageBlock title="Tournaments">
+  
+   <apex:pageBlockTable value="{!tournaments}" var="tournament">
+       <apex:column headerValue="Name">
+           <apex:outputLink value="SingleTournament?code={!URLENCODE(tournament.id)}">
+               {!tournament.Name__c}
+           </apex:outputLink>
+       </apex:column>
+      <apex:column value="{!tournament.Type__c}"/>
+      <apex:column value="{!tournament.Format__c}"/>
+      <apex:column value="{!tournament.Status__c}"/>
+      <apex:column value="{!tournament.Start_Date__c}"/>
+      <apex:column value="{!tournament.Complete_Date__c}"/> 
+   </apex:pageBlockTable>
+     
+</apex:pageBlock>
+</apex:page>

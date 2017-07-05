@@ -1,0 +1,19 @@
+<apex:page controller="PlayerLoginController">  
+  <apex:sectionHeader title="Table Tennis" subtitle="Log in"/>
+
+  <apex:form >
+    <apex:pageMessages /> <!-- this is where the error messages will appear -->
+    <apex:pageBlock title="Credentials">
+
+      <apex:pageBlockButtons location="bottom">
+        <apex:commandButton action="{!logIn}" value="Log in"/>
+      </apex:pageBlockButtons>
+
+      <apex:pageBlockSection columns="1">
+        <apex:inputField value="{!player.Email__c}" required="true"/>
+        <apex:inputSecret value="{!player.Password__c}" required="true"/>
+      </apex:pageBlockSection>
+
+    </apex:pageBlock>
+  </apex:form>
+</apex:page>

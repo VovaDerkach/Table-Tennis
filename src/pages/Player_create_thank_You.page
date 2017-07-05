@@ -1,0 +1,15 @@
+<apex:page controller="PlayerCreateController">  
+  <apex:sectionHeader title="Visualforce page" subtitle="Thank you for registration!"/>
+
+  <apex:form >
+    <apex:pageBlock title="Player Info">
+
+      <apex:pageBlockSection showHeader="false" columns="2">
+        <apex:outputField value="{!player.Name}" />
+        <apex:outputField value="{!player.Email__c}" />
+        <apex:outputField value="{!player.Password__c}" />
+      </apex:pageBlockSection>
+
+    </apex:pageBlock>
+  </apex:form>
+</apex:page>

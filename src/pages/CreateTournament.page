@@ -1,0 +1,28 @@
+<apex:page controller="TournamentCreateController" cache="false" action="{!edit}">
+    <apex:sectionHeader title="Table Tennis" subtitle="Create a new tournament"/>
+
+  <apex:form >
+    <apex:pageMessages /> <!-- this is where the error messages will appear -->
+    <apex:pageBlock title="Tournament Info" rendered="{!isManager}">
+
+      <apex:pageBlockButtons location="bottom">
+        <apex:commandButton action="{!save}" value="Save"/>
+      </apex:pageBlockButtons>
+
+      <apex:pageBlockSection showHeader="false" columns="2">
+        <apex:inputField value="{!tournament.Name__c}" required="true"/>
+        <apex:inputField value="{!tournament.Status__c}" required="true"/>
+        <apex:inputField value="{!tournament.Format__c}" required="true"/>
+        <apex:inputField value="{!tournament.Start_Date__c}" required="true"/>
+        <apex:inputField value="{!tournament.Type__c}" required="true"/>
+        <apex:inputField value="{!tournament.Complete_Date__c}" required="true"/>
+      </apex:pageBlockSection>
+
+    </apex:pageBlock>
+      <apex:pageBlock rendered="{!!isManager}">
+        <h1>
+            Sorry, you don't have enough permissions to browse this page.
+        </h1>
+      </apex:pageBlock>
+  </apex:form>
+</apex:page>

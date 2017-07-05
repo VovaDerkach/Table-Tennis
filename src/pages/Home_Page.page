@@ -1,0 +1,29 @@
+<apex:page controller="HomePageController" cache="false">
+    <style type="text/css">
+        h1 {
+    		font-size:20px;
+		}
+		a {font-size: 20px}
+    </style>
+    
+  	<h1>Welcome on Home Page!</h1>
+  	<br/>
+    
+   <apex:pageBlock rendered="{!!isLogged}">
+    <apex:outputLink value="Player_create">Sign up</apex:outputLink>
+    <br/>
+    <apex:outputLink value="Login_page">Login in</apex:outputLink>
+   </apex:pageBlock>
+    
+    <apex:pageBlock rendered="{!isManager}">
+        <apex:outputLink value="CreateTournament">Create Tournament</apex:outputLink>
+    </apex:pageBlock>
+   
+    <apex:pageBlock rendered="{!isLogged}">
+        <apex:outputLink value="LogOut_page">Log out</apex:outputLink>
+    </apex:pageBlock>
+    
+    <apex:pageBlock >
+        <apex:outputLink value="AllTournaments">Show All Tournaments</apex:outputLink>
+    </apex:pageBlock>
+</apex:page>

@@ -1,0 +1,100 @@
+<apex:page controller="SingleTournamentController" cache="false" action="{!checkIfConfirmationTeam}">
+    
+    <apex:form >
+    <apex:pageMessages />
+    <apex:pageBlock title="Tournament Details">
+    <apex:pageBlockSection >
+        <apex:outputField value="{!tournament.Name__c}"/>
+        <apex:outputField value="{!tournament.Type__c}"/>
+        <apex:outputField value="{!tournament.Format__c}"/>
+        <apex:outputField value="{!tournament.Status__c}"/>
+        <apex:outputField value="{!tournament.Start_Date__c}"/>
+        <apex:outputField value="{!tournament.Complete_Date__c}"/>
+    </apex:pageBlockSection>
+    
+    <apex:pageBlockButtons location="bottom" rendered="{!!isManager && isLogged}">
+        <apex:commandButton action="{!createTeam}" value="Create team" rendered="{!!isSinglePlayerTournament}"/>
+        <apex:commandButton action="{!apply}" value="Apply" rendered="{!!isApplied}"/>
+	</apex:pageBlockButtons>
+        
+    <apex:pageBlockButtons location="bottom" rendered="{!isManager}">
+    	<apex:commandButton action="{!deleteTournament}" value="Delete"/>
+         &nbsp; &nbsp;
+        <apex:commandButton action="{!editTournament}" value="Edit"/>
+         &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+        <apex:commandButton action="{!createTeam}" value="Create team" rendered="{!!isSinglePlayerTournament}"/>
+        <apex:commandButton action="{!apply}" value="Apply" rendered="{!!isApplied}"/>
+        &nbsp; &nbsp; &nbsp; &nbsp;
+        <apex:commandButton action="{!startTournament}" value="Start tournament" rendered="{!isUpcomingTour}"/>
+	</apex:pageBlockButtons>
+        
+    <apex:pageBlockButtons rendered="{!pickTeammate && !isTeamConfirmation}" location="bottom" >
+        <apex:outputLabel value="Please enter the name of your team: " for="teamName"/>
+        <apex:inputText value="{!teamName}" required="true" id="teamName"/>
+        <br />
+        <br />
+        <apex:outputLabel value="Pick your teammate: " for="selectList"/>
+    	<apex:selectList value="{!player}" size="1" id="selectList" required="true">
+        <apex:selectOptions value="{!items}"/>
+    	</apex:selectList>
+            
+        &nbsp; &nbsp; &nbsp; &nbsp;
+        <apex:commandButton action="{!sendTeamInvitation}" value="Send invitation"/>
+    </apex:pageBlockButtons>
+        
+    <apex:pageBlockButtons rendered="{!isTeamConfirmation}" location="bottom" >
+        <apex:outputLabel value="The name of your team: " for="teamName"/>
+        <apex:inputText value="{!teamName}" required="true" id="teamName"/>
+        <br />
+        <br />
+        <apex:outputLabel value="Your teammate: " for="selectList"/>
+    	<apex:selectList value="{!player}" size="1" id="selectList" required="true">
+        <apex:selectOptions value="{!items}"/>
+    	</apex:selectList>
+            
+        &nbsp; &nbsp; &nbsp; &nbsp;
+        <apex:commandButton action="{!saveTeam}" value="Save team"/>
+    </apex:pageBlockButtons>
+        
+    </apex:pageBlock>
+    </apex:form>
+    
+    <apex:pageBlock title="Tournament grid">
+    	<apex:pageBlockTable value="{!allGames}" var="singleGame" rendered="{!!isUpcomingTour}">
+       		<apex:column value="{!singleGame.First_opponent_name__c}"/>
+       		<apex:column value="{!singleGame.Second_opponent_name__c}"/>
+            <apex:column value="{!singleGame.First_opponent_score__c}"/>
+       		<apex:column value="{!singleGame.Second_player_score__c}"/>
+            <apex:column >
+           		<apex:outputLink value="SingleGame?code={!URLENCODE(singleGame.id)}">
+               		Enter the scores
+           		</apex:outputLink>
+       		</apex:column>
+    	</apex:pageBlockTable>
+    </apex:pageBlock>
+    
+    
+    
+    <apex:pageBlock title="Tournament results" rendered="false">
+ 		<apex:variable value="{!0}" var="index" />   
+		<apex:pageBlockTable value="{!playersNames}" var="plName">
+            <apex:column headerValue="№">
+                <apex:outputText >
+                <apex:variable value="{!index + 1}" var="index" />
+                {!index}
+                </apex:outputText>
+            </apex:column>
+            <apex:column headerValue="Players\Players" value="{!plName}"/>
+            
+            <apex:repeat var="keyName" value="{!resultRRMatrix}">
+    		<apex:column headerValue="{!keyName}" >
+                <apex:variable value="{!index-1}" var="idx" />  
+                <apex:outputText value="{!IF(resultRRMatrix[keyName][idx] != -1, resultRRMatrix[keyName][idx], '-')}"/> 						
+            </apex:column>
+            </apex:repeat>
+    
+ 		</apex:pageBlockTable>
+        
+	</apex:pageBlock> 
+    
+</apex:page>
