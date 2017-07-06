@@ -34,19 +34,6 @@ public class SingleTournamentController extends AdminPermissions {
         set;
     }
     
-    
-    public Boolean pickTeammate {
-        get {
-            if (pickTeammate == null) {
-                return false;
-            }
-            else {
-                return pickTeammate;
-            }
-        }
-        set;
-    }
-    
     public Boolean isTeamConfirmation {
         get {
             if (isTeamConfirmation == null) {
@@ -82,6 +69,12 @@ public class SingleTournamentController extends AdminPermissions {
         set;
     }
     
+    public Boolean isInProgressTour {
+        get {
+            return tournament.Status__c == 'In progress';
+        }
+    }
+    
     public Boolean isSinglePlayerTournament {
         get {
             return tournament.Format__c == '1x1';
@@ -91,19 +84,49 @@ public class SingleTournamentController extends AdminPermissions {
     
     public Boolean isApplied {
         get {
-            if (!isSinglePlayerTournament) {
-                return true;
-            }
-        	Cookie playerCookie = ApexPages.currentPage().getCookies().get('playerCookie');
-        	loggedPlayerId = playerCookie.getValue();
-            List<Player_Tournament__c> tournamentApplications = [SELECT id FROM Player_Tournament__c 
+            if (isLogged) {
+                
+        		Cookie playerCookie = ApexPages.currentPage().getCookies().get('playerCookie');	
+            
+        		loggedPlayerId = playerCookie.getValue();
+            	if (isSinglePlayerTournament) {
+            		List<Player_Tournament__c> tournamentApplications = [SELECT id FROM Player_Tournament__c 
                                                      WHERE Player_Tournament__c.Tournament__r.id = : tournament.id 
                                                      AND Player_Tournament__c.Player__r.id = :loggedPlayerId];
      
-            return tournamentApplications.size() != 0;           
+                    return tournamentApplications.size() != 0; 
+            	}
+                else {
+                    List<Team__c> teamAtTour = [SELECT id FROM Team__c WHERE Tournament__c = :tournament.id];
+                    return teamAtTour.size() != 0;
+                }
+            }
+            else {
+                return false;
+            }
         }
             
         set;
+    }
+        
+    public Boolean pickTeammate {
+        get {
+            if (pickTeammate == null) {
+                return false;
+            }
+            else {
+                return pickTeammate;
+            }
+        }
+        set;
+    }
+    
+    public void finishTournament() {
+        tournament.Status__c = 'Finished';
+        update tournament;
+        
+        String infoMessage = 'You have successfully finished the tournament.';
+        ApexPages.addMessage(new ApexPages.message(ApexPages.severity.Info, infoMessage));
     }
 
     public PageReference deleteTournament() {
@@ -117,10 +140,15 @@ public class SingleTournamentController extends AdminPermissions {
   }
     
     public PageReference editTournament() {
+        if (isUpcomingTour) {
         String tournamentId = tournament.id;
         PageReference link= Page.CreateTournament;
     	link.getParameters().put('id', tournamentId);
         return link;
+        }
+        else {
+            return null;
+        }
   }
     
     public Pagereference apply() {
@@ -180,15 +208,26 @@ public class SingleTournamentController extends AdminPermissions {
         
         String infoMessage = 'You have successfully created the new team.';
         ApexPages.addMessage(new ApexPages.message(ApexPages.severity.Info, infoMessage));
+        pickTeammate = !pickTeammate;
         
         return null; 
     }
     
     public Pagereference sendTeamInvitation() {
         
+        String infoMessage = null;
+        List<Player_Team__c> playersTeams = [Select id From Player_Team__c Where Player__r.id = :player];
+        if (playersTeams.size() != 0) {
+            infoMessage = 'Your desired teammate already is a member of another team at this tournament.';
+            ApexPages.addMessage(new ApexPages.message(ApexPages.severity.Error, infoMessage));
+            pickTeammate = !pickTeammate;
+            return null;
+        }
+        
+        
         SendingNotifications.sendEmailForTeamConfirmation(loggedPlayerId, player, tournament.id, teamName);
         
-        String infoMessage = 'You have successfully sent the team invitation.';
+        infoMessage = 'You have successfully sent the team invitation.';
         ApexPages.addMessage(new ApexPages.message(ApexPages.severity.Info, infoMessage));
         pickTeammate = !pickTeammate;
         
@@ -218,6 +257,13 @@ public class SingleTournamentController extends AdminPermissions {
             return null;
         }
         
+        List<Tournaments__c> tournaments = [Select Status__c From Tournaments__c Where Status__c = :'In progress'];
+            if (tournaments.size() != 0) {
+                String errorMessage = 'Only one tournament can be in progress at a time.';
+        		ApexPages.addMessage(new ApexPages.message(ApexPages.severity.Error, errorMessage));
+                return null;
+            }
+        
         tournament.Status__c = 'In progress';
         update tournament;
         
@@ -228,21 +274,40 @@ public class SingleTournamentController extends AdminPermissions {
             singleEliminationGrid();
         }
         
+        String infoMessage = 'You have successfully started the tournament.';
+       	ApexPages.addMessage(new ApexPages.message(ApexPages.severity.Info, infoMessage));
+        
         return null;
     }
     
-    List<Player__c> playersOfTour = [SELECT id, Name 
-                          			FROM Player__c WHERE id 
-                          			IN (SELECT Player__c FROM Player_Tournament__c WHERE Tournament__c = :tournament.id)];
+    List<Player__c> playersOfTour = null;
+            
+    List<Team__c> teamsOfTour = null;
     
     public List<String> playersNames {
         get {
             if (playersNames == null) {
-                playersNames = new List<String>();	
+                if (isSinglePlayerTournament) {
+                playersNames = new List<String>();
+                playersOfTour = [SELECT id, Name 
+                          			FROM Player__c WHERE id 
+                          			IN (SELECT Player__c FROM Player_Tournament__c WHERE Tournament__c = :tournament.id)];
+                
                 for (Player__c pl : playersOfTour) {
                     playersNames.add(pl.Name);
                 }
-                playersNames.sort();
+                    playersNames.sort(); }
+                else {
+                    playersNames = new List<String>();
+                	teamsOfTour = [SELECT id, Name__c 
+                          			FROM Team__c
+                          			WHERE Tournament__c = :tournament.id];
+                
+                	for (Team__c pl : teamsOfTour) {
+                    	playersNames.add(pl.Name__c);
+                	}
+                    playersNames.sort();
+                }
             }
             return playersNames;
         }
@@ -269,9 +334,11 @@ public class SingleTournamentController extends AdminPermissions {
     
     public Map<String, List<Integer>> resultRRMatrix {
         get {
-            if (resultRRMatrix == null) {
+            if (resultRRMatrix == null && !isUpcomingTour) {
                 resultRRMatrix = new Map<String, List<Integer>>();
-                List<String> pNames = new List<String>(playersNames);
+                List<String> pNames = new List<String>();
+                pNames.addAll(playersNames);
+               
         		for (Integer i = 0; i < pNames.size(); i++) {
                     String plName = pNames.get(i);
             		List<Integer> scores = new Integer[pNames.size()];
@@ -303,11 +370,7 @@ public class SingleTournamentController extends AdminPermissions {
         }
         set;
     }
-    
-    public List<Team__c> teamsOfTour {
-        get;
-        set;
-    }
+
     
     public List<Game__c> allGames {
         get {
@@ -324,43 +387,71 @@ public class SingleTournamentController extends AdminPermissions {
     }
     
     public void roundRobingGrid() {
-        if (tournament.Format__c == '1x1') {    
-            createRRGridForPlayers(playersOfTour);  
+        if (tournament.Format__c == '1x1') {
+            playersOfTour = [SELECT id, Name 
+                          			FROM Player__c WHERE id 
+                          			IN (SELECT Player__c FROM Player_Tournament__c WHERE Tournament__c = :tournament.id)];
+            
+            createRRGrid(playersOfTour);  
         }
         else if (tournament.Format__c == '2x2') {
             teamsOfTour = [SELECT id, Name__c 
                 			FROM Team__c WHERE Tournament__c = : tournament.id];
+            
+            createRRGrid(teamsOfTour);
         }
     }
     
     public void singleEliminationGrid() {
         if (tournament.Format__c == '1x1') {
-           createSEGridForPlayers(playersOfTour); 
+            playersOfTour = [SELECT id, Name 
+                          			FROM Player__c WHERE id 
+                          			IN (SELECT Player__c FROM Player_Tournament__c WHERE Tournament__c = :tournament.id)];
+            
+           createSEGrid(playersOfTour); 
         }
         else if (tournament.Format__c == '2x2') {
+            teamsOfTour = [SELECT id, Name__c 
+                			FROM Team__c WHERE Tournament__c = : tournament.id];
             
+            createSEGrid(teamsOfTour);
         }
     }
     
-    public void createRRGridForPlayers(List<Player__c> players) {
+    public void createRRGrid(List<sObject> opponents) {
         List<Game__c> resultGames = new List<Game__c>();
         
-        Integer playersCount = players.size();
+        Integer opponentsCount = opponents.size();
         
-        for (Integer i = 0; i < playersCount; i++) {
+        for (Integer i = 0; i < opponentsCount; i++) {
             
-            for (Integer j = playersCount - 1; j > i; j--) {
-                Player__c firstOpponent = players.get(i);
-            	Player__c secondOpponent = players.get(j);
-            	resultGames.add(new Game__c(Tournament__c = tournament.id, 
+            for (Integer j = opponentsCount - 1; j > i; j--) {
+                if (opponents.get(0) instanceof Player__c) {
+                Player__c firstOpponent = (Player__c) opponents.get(i);
+            	Player__c secondOpponent = (Player__c) opponents.get(j);
+                    
+                resultGames.add(new Game__c(Tournament__c = tournament.id, 
                                         First_opponent__c = firstOpponent.id, Second_opponent__c = secondOpponent.id,
                                        First_opponent_name__c = firstOpponent.Name, Second_opponent_name__c = secondOpponent.Name));
+                }
+                else {
+                    Team__c firstOpponent = (Team__c) opponents.get(i);
+            		Team__c secondOpponent = (Team__c) opponents.get(j);
+                    
+                	resultGames.add(new Game__c(Tournament__c = tournament.id, 
+                                        First_opponent__c = firstOpponent.id, Second_opponent__c = secondOpponent.id,
+                                       First_opponent_name__c = firstOpponent.Name__c, Second_opponent_name__c = secondOpponent.Name__c));
+                }
             }
         }
         insert resultGames;          
     }
     
-    public void createSEGridForPlayers(List<Player__c> players) {
+    public void createSEGrid(List<sObject> contenders) {
+        List<Game__c> resultGames = new List<Game__c>();
+        
+        Integer contendersCount = contenders.size();
+        
         
     }
 }

@@ -13,19 +13,20 @@
     </apex:pageBlockSection>
     
     <apex:pageBlockButtons location="bottom" rendered="{!!isManager && isLogged}">
-        <apex:commandButton action="{!createTeam}" value="Create team" rendered="{!!isSinglePlayerTournament}"/>
-        <apex:commandButton action="{!apply}" value="Apply" rendered="{!!isApplied}"/>
+        <apex:commandButton action="{!createTeam}" value="Create team" rendered="{!!isSinglePlayerTournament && isUpcomingTour && !pickTeammate && !isApplied}"/>
+        <apex:commandButton action="{!apply}" value="Apply" rendered="{!!isApplied && isUpcomingTour && isSinglePlayerTournament}"/>
 	</apex:pageBlockButtons>
         
     <apex:pageBlockButtons location="bottom" rendered="{!isManager}">
-    	<apex:commandButton action="{!deleteTournament}" value="Delete"/>
+        <apex:commandButton action="{!deleteTournament}" value="Delete" rendered="{!isUpcomingTour}"/>
          &nbsp; &nbsp;
-        <apex:commandButton action="{!editTournament}" value="Edit"/>
+        <apex:commandButton action="{!editTournament}" value="Edit" rendered="!isUpcomingTour"/>
          &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-        <apex:commandButton action="{!createTeam}" value="Create team" rendered="{!!isSinglePlayerTournament}"/>
-        <apex:commandButton action="{!apply}" value="Apply" rendered="{!!isApplied}"/>
+        <apex:commandButton action="{!createTeam}" value="Create team" rendered="{!!isSinglePlayerTournament && isUpcomingTour && !pickTeammate && !isApplied}"/>
+        <apex:commandButton action="{!apply}" value="Apply" rendered="{!!isApplied && isUpcomingTour && isSinglePlayerTournament}"/>
         &nbsp; &nbsp; &nbsp; &nbsp;
         <apex:commandButton action="{!startTournament}" value="Start tournament" rendered="{!isUpcomingTour}"/>
+        <apex:commandButton action="{!finishTournament}" value="Finish tournament" rendered="{!isInProgressTour}"/>
 	</apex:pageBlockButtons>
         
     <apex:pageBlockButtons rendered="{!pickTeammate && !isTeamConfirmation}" location="bottom" >
@@ -42,7 +43,7 @@
         <apex:commandButton action="{!sendTeamInvitation}" value="Send invitation"/>
     </apex:pageBlockButtons>
         
-    <apex:pageBlockButtons rendered="{!isTeamConfirmation}" location="bottom" >
+    <apex:pageBlockButtons rendered="{!isTeamConfirmation && pickTeammate}" location="bottom" >
         <apex:outputLabel value="The name of your team: " for="teamName"/>
         <apex:inputText value="{!teamName}" required="true" id="teamName"/>
         <br />
@@ -59,14 +60,15 @@
     </apex:pageBlock>
     </apex:form>
     
-    <apex:pageBlock title="Tournament grid">
-    	<apex:pageBlockTable value="{!allGames}" var="singleGame" rendered="{!!isUpcomingTour}">
+    <apex:pageBlock title="Tournament grid" rendered="{!isInProgressTour}">
+    	<apex:pageBlockTable value="{!allGames}" var="singleGame">
        		<apex:column value="{!singleGame.First_opponent_name__c}"/>
        		<apex:column value="{!singleGame.Second_opponent_name__c}"/>
             <apex:column value="{!singleGame.First_opponent_score__c}"/>
        		<apex:column value="{!singleGame.Second_player_score__c}"/>
             <apex:column >
-           		<apex:outputLink value="SingleGame?code={!URLENCODE(singleGame.id)}">
+           		<apex:outputLink value="SingleGame?code={!URLENCODE(singleGame.id)}&tourId={!URLENCODE(tournament.id)}"
+                                                                            rendered="{!isApplied && isInProgressTour}">
                		Enter the scores
            		</apex:outputLink>
        		</apex:column>
@@ -75,8 +77,8 @@
     
     
     
-    <apex:pageBlock title="Tournament results" rendered="false">
- 		<apex:variable value="{!0}" var="index" />   
+    <apex:pageBlock title="Tournament results" rendered="{!!isUpcomingTour && !isInProgressTour}">
+ 		<apex:variable value="{!0}" var="index" />
 		<apex:pageBlockTable value="{!playersNames}" var="plName">
             <apex:column headerValue="№">
                 <apex:outputText >

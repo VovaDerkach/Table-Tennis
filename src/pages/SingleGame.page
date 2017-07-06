@@ -1,7 +1,7 @@
-<apex:page controller="SingleGameController" cache="false" action="{!checkForScores}" extensions="SingleGameExtension">
+<apex:page controller="SingleGameController" cache="false" action="{!checkForScores}">
     <apex:form >
     <apex:pageMessages />
-    <apex:pageBlock title="Game Details">
+    <apex:pageBlock title="Game Details" rendered="{!isGameParticipant}">
     <apex:pageBlockSection >
         <apex:outputField label="Tournament name" value="{!game.Tournament__r.Name__c}"/>       
         <apex:inputField value="{!game.First_opponent_score__c}" rendered="{!!isScoreConfirmation}"/>
@@ -20,5 +20,11 @@
      </apex:pageBlockButtons>
 
     </apex:pageBlock>
+        
+    	<apex:pageBlock rendered="{!!isGameParticipant}">
+        	<h1>
+            	Sorry, you don't have enough permissions to browse this page.
+        	</h1>
+        </apex:pageBlock>
     </apex:form>
 </apex:page>

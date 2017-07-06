@@ -18,6 +18,52 @@ public class SingleGameController {
     set;
   }
     
+  Tournaments__c tournament {
+    get {
+        if (tournament == null) {
+            tournament = new Tournaments__c();
+            String urlValue = Apexpages.currentPage().getUrl();
+        	String tournamentId = ApexPages.currentPage().getParameters().get('tourId');
+        	List<Tournaments__c>  retrievedTournaments = [Select id, Name__c, Type__c, Format__c, 
+                                                          Status__c, Start_Date__c, Complete_Date__c 
+                                                          FROM Tournaments__c where Id =:tournamentId];
+            tournament = retrievedTournaments[0];
+        }
+      	return tournament;
+    }
+    set;
+  }
+    
+    Boolean isSinglePlayerTournament = tournament.Format__c == '1x1';
+    
+    public Boolean isGameParticipant {
+        get {
+            Cookie playerCookie = ApexPages.currentPage().getCookies().get('playerCookie');
+       		String loggedPlayerId = playerCookie.getValue();
+            
+            if (isSinglePlayerTournament) {
+            	if (loggedPlayerId.equals(game.First_opponent__c) || loggedPlayerId.equals(game.Second_opponent__c)) {
+                	return true;
+            	}
+            	else {
+                	return false;
+            	}
+            }
+            else {
+                List<Player_Team__c> teamsOfPlayer = [SELECT id, Team__r.Id FROM Player_Team__c WHERE Player__r.id = : loggedPlayerId];
+                String playerOfTeamId = teamsOfPlayer.get(0).Team__r.id;
+                
+                if (playerOfTeamId.equals(game.First_opponent__c) || playerOfTeamId.equals(game.Second_opponent__c)) {
+                	return true;
+            	}
+            	else {
+                	return false;
+            	}
+            }
+        }
+        set;
+    }
+    
   public Boolean isScoreConfirmation {
         get {
             if (isScoreConfirmation == null) {
@@ -72,9 +118,11 @@ public class SingleGameController {
         ApexPages.addMessage(new ApexPages.message(ApexPages.severity.Info, infoMessage));
     }
     
-    public void sendMessageAboutDenial() {
+    public PageReference sendMessageAboutDenial() {
         
         String infoMessage = 'You have denied saving the scores.';
         ApexPages.addMessage(new ApexPages.message(ApexPages.severity.Info, infoMessage));
+        
+        return Page.Home_page;
     }
 }
