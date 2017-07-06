@@ -23,7 +23,7 @@
         
     	<apex:pageBlock rendered="{!!isGameParticipant}">
         	<h1>
-            	Sorry, you don't have enough permissions to browse this page.
+            	Sorry, you aren't a participant of the game, that's why you cannot enter the scores.
         	</h1>
         </apex:pageBlock>
     </apex:form>

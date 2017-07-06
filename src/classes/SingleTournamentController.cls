@@ -82,6 +82,13 @@ public class SingleTournamentController extends AdminPermissions {
         set;
     }
     
+    public Boolean isRoundRobinType{
+        get {
+            return tournament.Type__c == 'Round Robin';
+        }
+        set;
+    }
+    
     public Boolean isApplied {
         get {
             if (isLogged) {
@@ -97,7 +104,9 @@ public class SingleTournamentController extends AdminPermissions {
                     return tournamentApplications.size() != 0; 
             	}
                 else {
-                    List<Team__c> teamAtTour = [SELECT id FROM Team__c WHERE Tournament__c = :tournament.id];
+                    List<Team__c> teamAtTour = [SELECT id FROM Team__c 
+                                                WHERE Tournament__c = :tournament.id 
+                                                AND id IN (SELECT Team__c FROM Player_Team__c WHERE Player__c = : loggedPlayerId)];
                     return teamAtTour.size() != 0;
                 }
             }
@@ -216,8 +225,10 @@ public class SingleTournamentController extends AdminPermissions {
     public Pagereference sendTeamInvitation() {
         
         String infoMessage = null;
-        List<Player_Team__c> playersTeams = [Select id From Player_Team__c Where Player__r.id = :player];
-        if (playersTeams.size() != 0) {
+        List<Team__c> teamAtTour = [SELECT id FROM Team__c 
+                                                WHERE Tournament__c = :tournament.id 
+                                                AND id IN (SELECT Team__c FROM Player_Team__c WHERE Player__c = : player)];
+        if (teamAtTour.size() != 0) {
             infoMessage = 'Your desired teammate already is a member of another team at this tournament.';
             ApexPages.addMessage(new ApexPages.message(ApexPages.severity.Error, infoMessage));
             pickTeammate = !pickTeammate;
@@ -245,7 +256,8 @@ public class SingleTournamentController extends AdminPermissions {
             
         Cookie cookieObj = new Cookie('playerCookie', currPlayerId, null, 10800, false);
         ApexPages.currentPage().setCookies(new Cookie[]{cookieObj});
-            
+        
+        pickTeammate = true;    
         teamName = proposedTeamName;
         player = teammateId;
         
@@ -451,7 +463,26 @@ public class SingleTournamentController extends AdminPermissions {
         List<Game__c> resultGames = new List<Game__c>();
         
         Integer contendersCount = contenders.size();
+        Integer pairsCount = contendersCount / 2;
         
-        
+        for (Integer i = 0; i < pairsCount; i++) {
+            if (contenders.get(0) instanceof Player__c) {
+                Player__c firstOpponent = (Player__c) contenders.get(i);
+            	Player__c secondOpponent = (Player__c) contenders.get(contendersCount - 1 - i);
+                    
+                resultGames.add(new Game__c(Tournament__c = tournament.id, 
+                                        First_opponent__c = firstOpponent.id, Second_opponent__c = secondOpponent.id,
+                                       First_opponent_name__c = firstOpponent.Name, Second_opponent_name__c = secondOpponent.Name));
+                }
+                else {
+                    Team__c firstOpponent = (Team__c) contenders.get(i);
+            		Team__c secondOpponent = (Team__c) contenders.get(contendersCount - 1 - i);
+                    
+                	resultGames.add(new Game__c(Tournament__c = tournament.id, 
+                                        First_opponent__c = firstOpponent.id, Second_opponent__c = secondOpponent.id,
+                                       First_opponent_name__c = firstOpponent.Name__c, Second_opponent_name__c = secondOpponent.Name__c));
+                }
+        }
+        insert resultGames; 
     }
 }

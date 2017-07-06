@@ -79,7 +79,7 @@
     
     <apex:pageBlock title="Tournament results" rendered="{!!isUpcomingTour && !isInProgressTour}">
  		<apex:variable value="{!0}" var="index" />
-		<apex:pageBlockTable value="{!playersNames}" var="plName">
+		<apex:pageBlockTable value="{!playersNames}" var="plName" rendered="{!!isRoundRobinType}">
             <apex:column headerValue="№">
                 <apex:outputText >
                 <apex:variable value="{!index + 1}" var="index" />
@@ -96,6 +96,10 @@
             </apex:repeat>
     
  		</apex:pageBlockTable>
+        
+        <apex:pageBlockTable value="{!playersNames}" var="plName" rendered="{!isRoundRobinType}">
+        	<apex:column value="{!plName}"/>
+        </apex:pageBlockTable>
         
 	</apex:pageBlock> 
     
